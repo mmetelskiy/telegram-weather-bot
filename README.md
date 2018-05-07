@@ -1,1 +1,1 @@
-# telegram-wheather-bot
+# telegram-weather-bot
