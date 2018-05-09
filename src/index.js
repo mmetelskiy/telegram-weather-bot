@@ -1,30 +1,19 @@
 const https = require('https');
-const fs = require('fs');
-const path = require('path');
+const express = require('express');
+const config = require('./config');
 
-const options = {
-  key: fs.readFileSync(path.join(__dirname, '../private/cert/YOURPRIVATE.key')),
-  cert: fs.readFileSync(path.join(__dirname, '../private/cert/YOURPUBLIC.pem'))
-};
+const app = express();
 
-https.createServer(options, (req, res) => {
-  if (req.method === 'POST') {
-    let body = '';
+app.use(express.json());
 
-    req.on('data', (chunk) => {
-      body += chunk.toString();
-    });
+app.post(config.server.basePath, (req, res) => {
+  console.log(req.body);
 
-    req.on('end', () => {
-      console.log(body);
-
-      res.writeHead(200);
-      res.end();
-    });
-  } else {
-    res.writeHead(200);
-    res.end('hello world');
-  }
-}).listen(8443, () => {
-  console.log('listening on 8443');
+  res.end();
 });
+
+https
+  .createServer(config.server.options, app)
+  .listen(config.server.port, () => {
+    console.log('listening on port', config.server.port);
+  });
