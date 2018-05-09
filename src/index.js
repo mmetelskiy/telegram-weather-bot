@@ -12,9 +12,11 @@ app.post(config.server.basePath, (req, res) => {
   console.log(JSON.stringify(req.body, null, 2));
 
   if (commandProcessor.isBotCommand(req.body)) {
-    commandProcessor.processCommand(req.body);
+    commandProcessor.processBotCommand(req.body);
+  } else if (commandProcessor.isLocation(req.body)) {
+    commandprocessor.processLocationSharing(req.body);
   } else {
-    commandProcessor.replyWithError(req.body);
+    commandProcessor.replyWithError(req.body, 'I cannot understand you :\'(');
   }
 
   res.end();

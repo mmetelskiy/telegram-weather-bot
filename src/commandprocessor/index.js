@@ -1,6 +1,20 @@
-const telegramApi = require('../telegramapi');
+const WError = require('verror').WError;
 
-const knownCommands = {};
+const telegramApi = require('../telegramapi');
+const weatherApi = require('../weatherapi');
+const weatherProcessor = require('../weatherapi/weatherprocessor');
+
+const getCurrentWeatherByLocation = function (update) {
+  telegramApi.sendLocationRequest(update.message.from.id);
+};
+
+const processUnknownCommand = function (update) {
+  exports.replyWithError(update, 'I don\'t know this command :(');
+};
+
+const knownCommands = {
+  '/w': getCurrentWeatherByLocation
+};
 
 const parseBotCommand = function (update) {
   const text = update.message.text;
@@ -27,12 +41,39 @@ exports.isBotCommand = function (update) {
     });
 };
 
-exports.processBotCommand = function (update) {
-  const parsedCommand = parseBotCommand(update);
-
-  telegramApi.sendText(update.chat.id, JSON.stringify(parsedCommand, null, 2));
+exports.isLocation = function (update) {
+  return update &&
+    update.message &&
+    update.message.location;
 };
 
-exports.replyWithError = function (update) {
-  telegramApi.sendText(update.chat.id, 'Cannot recognize command in your message :(');
+exports.processBotCommand = function (update) {
+  const parsedCommand = parseBotCommand(update);
+  const commandProcessor = knownCommands[parsedCommand.command] || processUnknownCommand;
+
+  commandProcessor(update);
+};
+
+exports.processLocationSharing = function (update) {
+  const location = update.message.location;
+
+  weatherApi.getCurrentWeatherByLocation({
+    longitude: location.longitude,
+    latitude: location.latitude
+  }, function processWeather(error, weather) {
+    if (error) {
+      console.log(new WError(error, 'Failed to get weather.'));
+
+      exports.replyWithError(update, 'Failed to get weather :(');
+      return;
+    }
+
+    const reply = weatherProcessor.transformWeatherObjectToText(weather);
+
+    telegramApi.sendText(update.message.chat.id, reply);
+  });
+};
+
+exports.replyWithError = function (update, text) {
+  telegramApi.sendText(update.message.chat.id, text || 'Something went wrong :(');
 };

@@ -13,5 +13,9 @@ module.exports = {
   },
   telegram: {
     baseUrl: 'https://api.telegram.org/bot' + privateConfig.botToken
+  },
+  weather: {
+    baseUrl: 'https://api.openweathermap.org/data/2.5',
+    token: privateConfig.openWeatherMapToken
   }
 };
