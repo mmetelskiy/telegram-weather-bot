@@ -4,7 +4,7 @@ const privateConfig = require('../private/config');
 
 module.exports = {
   server: {
-    basePath: privateConfig.botToken,
+    basePath: '/' + privateConfig.botToken,
     port: 8443,
     options: {
       key: fs.readFileSync(path.join(__dirname, '../private/cert/YOURPRIVATE.key')),
