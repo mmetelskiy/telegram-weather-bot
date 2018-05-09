@@ -13,7 +13,10 @@ exports.sendText = function (chatId, text) {
     uri: '/sendMessage',
     body: {
       chat_id: chatId,
-      text
+      text,
+      reply_markup: {
+        remove_keyboard: true
+      }
     }
   }, function processApiResponse(error, response, body) {
     if (error) {

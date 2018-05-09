@@ -14,7 +14,7 @@ app.post(config.server.basePath, (req, res) => {
   if (commandProcessor.isBotCommand(req.body)) {
     commandProcessor.processBotCommand(req.body);
   } else if (commandProcessor.isLocation(req.body)) {
-    commandprocessor.processLocationSharing(req.body);
+    commandProcessor.processLocationSharing(req.body);
   } else {
     commandProcessor.replyWithError(req.body, 'I cannot understand you :\'(');
   }
