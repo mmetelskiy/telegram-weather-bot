@@ -1,0 +1,8 @@
+{
+  "apps": [
+    {
+      "name": "telegram-weather-bot",
+      "script": "npm start"
+    }
+  ]
+}
