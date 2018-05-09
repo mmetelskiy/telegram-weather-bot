@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "telegram-weather-bot",
-      "script": "npm start"
+      "script": "src/index.js"
     }
   ]
 }
