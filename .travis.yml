@@ -14,8 +14,12 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script:
-  - ssh-keyscan -H ${SERVER_HOST} >> ~/.ssh/known_hosts
-  - ssh travis@${SERVER_HOST} cd telegram-weather-bot && git reset --hard && git checkout master && git pull && scripts/deploy.sh
+  script: >
+    ssh-keyscan -H ${SERVER_HOST} >> ~/.ssh/known_hosts &&
+    ssh travis@${SERVER_HOST} "cd telegram-weather-bot &&
+    git reset --hard &&
+    git checkout master &&
+    git pull &&
+    scripts/deploy.sh"
   on:
     branch: master
