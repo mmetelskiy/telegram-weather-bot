@@ -25,11 +25,11 @@ const iconToEmoji = {
   '50n': '\uD83C\uDF2B'
 };
 
-const getFormattedTime = function (utcTimestamp) {
-  const date = new Date(utcTimestamp * 1000);
+const getFormattedTime = function (utcTimestamp, utcOffset) {
+  const date = new Date((utcTimestamp + utcOffset) * 1000);
 
-  // moment().locale('ru').calendar(date);
-  return moment().calendar(date);
+  // moment(date).locale('ru').calendar();
+  return moment(date).calendar(new Date().getTime() + utcOffset * 1000);
 };
 
 /* weatherObj:
@@ -87,7 +87,10 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
     callback(null, 'Failed to get forecast.');
   }
 
-  timezoneApi.getUtcFullOffset(forecastObj.lat, forecastObj.lon, function processOffset(timezoneApiError, utcOffset) {
+  const lat = _.get(forecastObj, ['city', 'coord', 'lat'], '?');
+  const lon = _.get(forecastObj, ['city', 'coord', 'lon'], '?');
+
+  timezoneApi.getUtcFullOffset(lat, lon, function processOffset(timezoneApiError, utcOffset) {
     if (timezoneApiError) {
       console.log(new WError(timezoneApiError, 'Failed to get time offset by location.'));
 
@@ -103,7 +106,7 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
         if (!utcTimestamp) {
           time = '?';
         } else {
-          time = getFormattedTime(utcTimestamp + utcOffset);
+          time = getFormattedTime(utcTimestamp, utcOffset);
         }
 
         if (timezoneApiError && utcTimestamp) {
@@ -116,5 +119,7 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
             .join('\n    ');
       })
       .join('\n\n');
+
+    callback(null, result);
   });
 };
