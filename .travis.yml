@@ -17,6 +17,6 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: ssh-keyscan -H ${SERVER_HOST} >> ~/.ssh/known_hosts && ssh travis@${SERVER_HOST} pwd
+  script: ssh-keyscan -H ${SERVER_HOST} >> ~/.ssh/known_hosts && ssh travis@${SERVER_HOST} telegram-weather-bot/scripts/deploy.sh
   on:
     branch: master
