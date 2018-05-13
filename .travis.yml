@@ -17,6 +17,6 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: bash ssh travis@${SERVER_HOST} scripts/deploy.sh
+  script: ssh travis@${SERVER_HOST} scripts/deploy.sh
   on:
     branch: master
