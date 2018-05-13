@@ -21,6 +21,6 @@ deploy:
     git checkout master &&
     git pull &&
     chmod +x scripts/deploy.sh &&
-    scripts/deploy.sh"
+    scripts/deploy.sh "
   on:
     branch: master
