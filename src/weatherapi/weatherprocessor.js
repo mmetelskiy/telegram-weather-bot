@@ -28,7 +28,7 @@ exports.transformWeatherObjectToText = function (weatherObj) {
   const icon = weather && weather.icon;
   const emoji = iconToEmoji[icon] || '?';
 
-  return `${emoji} - ${weather.description}\n` +
+  return `${emoji} ${weather.description}\n` +
     `${main.temp}\u2103\n` +
     `${wind.speed}m/s`;
 };
