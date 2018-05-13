@@ -1,3 +1,5 @@
+const _ = require('lodash');
+
 const iconToEmoji = {
   '01d': '\u2600',
   '02d': '\uD83C\uDF24',
@@ -20,15 +22,59 @@ const iconToEmoji = {
   '50n': '\uD83C\uDF2B'
 };
 
+/* weatherObj:
+  {
+    main: {
+      temp
+    },
+    wind: {
+      speed
+    },
+    weather: [
+      {
+        description,
+        icon
+      }
+    ]
+  }
+*/
 exports.transformWeatherObjectToText = function (weatherObj) {
-  const main = weatherObj.main;
-  const wind = weatherObj.wind;
+  const temperature = _.get(weatherObj, ['main', 'temp'], '?');
+  const windSpeed = _.get(weatherObj, ['wind', 'speed'], '?');
 
-  const weather = weatherObj.weather && weatherObj.weather[0];
-  const icon = weather && weather.icon;
-  const emoji = iconToEmoji[icon] || '?';
+  const weather = _.get(weatherObj, ['weather', 0], {});
+  const description = _.get(weather, 'description', '?');
 
-  return `${emoji} ${weather.description}\n` +
-    `${main.temp}\u2103\n` +
-    `${wind.speed}m/s`;
+  const icon = _.get(weather, ['icon'], '?');
+  const emoji = _.get(iconToEmoji, [icon], '?');
+
+  return `${emoji} ${description}\n` +
+    `${temperature}\u2103\n` +
+    `${windSpeed}m/s`;
+};
+
+/*
+  {
+    list: [
+      weatherObj,
+      weatherObj,
+      ...
+    ]
+  }
+*/
+exports.transformWeatherForecastToText = function (forecastObj) {
+  const list = _.get(forecastObj, ['list'], []);
+
+  if (!Array.isAray(list)) {
+    return 'Failed to get forecast.';
+  }
+
+  return list
+    .map((weatherObj) => {
+      return _.get(weatherObj, ['dt_txt'], '?') + ' UTC\n' +
+        exports.transformWeatherObjectToText(weatherObj)
+          .split('\n')
+          .join('  \n');
+    })
+    .join('\n');
 };

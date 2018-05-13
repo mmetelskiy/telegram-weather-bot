@@ -8,12 +8,36 @@ const getCurrentWeatherByLocation = function (update) {
   telegramApi.sendLocationRequest(update.message.from.id);
 };
 
+const get24hForecastByCity = function (update, args) {
+  const city = Array.isArray(args) && args.join(' ');
+
+  if (!city) {
+    exports.replyWithError(update, 'City wasn\'t provided :(');
+    return;
+  }
+
+  weatherApi.get24hForecastByCity(city, function processWeather(error, result) {
+    if (error) {
+      console.log(new WError(error, 'Failed to get weather forecast.'));
+
+      exports.replyWithError(update, 'Failed to get weather forecast :(');
+      return;
+    }
+
+    const reply = weatherProcessor.transformWeatherForecastToText(result);
+
+    telegramApi.sendText(update.message.chat.id, reply);
+  });
+};
+
 const processUnknownCommand = function (update) {
   exports.replyWithError(update, 'I don\'t know this command :(');
 };
 
 const knownCommands = {
-  '/w': getCurrentWeatherByLocation
+  '/w': getCurrentWeatherByLocation,
+  '/here': getCurrentWeatherByLocation,
+  '/24h': get24hForecastByCity
 };
 
 const parseBotCommand = function (update) {
@@ -51,7 +75,7 @@ exports.processBotCommand = function (update) {
   const parsedCommand = parseBotCommand(update);
   const commandProcessor = knownCommands[parsedCommand.command] || processUnknownCommand;
 
-  commandProcessor(update);
+  commandProcessor(update, parsedCommand.args);
 };
 
 exports.processLocationSharing = function (update) {

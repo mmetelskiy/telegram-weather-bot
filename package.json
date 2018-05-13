@@ -19,6 +19,7 @@
   "homepage": "https://github.com/mmetelskiy/telegram-weather-bot#readme",
   "dependencies": {
     "express": "^4.16.3",
+    "lodash": "^4.17.10",
     "request": "^2.85.0",
     "verror": "^1.10.0"
   }
