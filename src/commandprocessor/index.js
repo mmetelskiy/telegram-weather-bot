@@ -24,9 +24,15 @@ const get24hForecastByCity = function (update, args) {
       return;
     }
 
-    const reply = weatherProcessor.transformWeatherForecastToText(result);
+    weatherProcessor.transformWeatherForecastToText(result, function sendReply(error, reply) {
+      if (error) {
+        console.log(new WError(error, 'Failed to get text from forecast.'));
 
-    telegramApi.sendText(update.message.chat.id, reply);
+        exports.replyWithError(update);
+      } else {
+        telegramApi.sendText(update.message.chat.id, reply);
+      }
+    });
   });
 };
 

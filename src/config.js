@@ -17,5 +17,9 @@ module.exports = {
   weather: {
     baseUrl: 'https://api.openweathermap.org/data/2.5',
     token: privateConfig.openWeatherMapToken
+  },
+  timezone: {
+    baseUrl: 'https://api.timezonedb.com/v2/get-time-zone',
+    token: privateConfig.timezoneDBToken
   }
 };

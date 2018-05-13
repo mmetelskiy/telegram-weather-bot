@@ -1,4 +1,7 @@
 const _ = require('lodash');
+const moment = require('moment');
+const WError = require('verror').WError;
+const timezoneApi = require('../timezoneapi');
 
 const iconToEmoji = {
   '01d': '\u2600',
@@ -22,6 +25,13 @@ const iconToEmoji = {
   '50n': '\uD83C\uDF2B'
 };
 
+const getFormattedTime = function (utcTimestamp) {
+  const date = new Date(utcTimestamp * 1000);
+
+  // moment().locale('ru').calendar(date);
+  return moment().calendar(date);
+};
+
 /* weatherObj:
   {
     main: {
@@ -35,7 +45,9 @@ const iconToEmoji = {
         description,
         icon
       }
-    ]
+    ],
+    dt,
+    dt_txt
   }
 */
 exports.transformWeatherObjectToText = function (weatherObj) {
@@ -55,6 +67,12 @@ exports.transformWeatherObjectToText = function (weatherObj) {
 
 /*
   {
+    city: {
+      coord: {
+        lat,
+        lon
+      }
+    }
     list: [
       weatherObj,
       weatherObj,
@@ -62,20 +80,41 @@ exports.transformWeatherObjectToText = function (weatherObj) {
     ]
   }
 */
-exports.transformWeatherForecastToText = function (forecastObj) {
+exports.transformWeatherForecastToText = function (forecastObj, callback) {
   const list = _.get(forecastObj, ['list'], []);
 
   if (!Array.isArray(list)) {
-    return 'Failed to get forecast.';
+    callback(null, 'Failed to get forecast.');
   }
 
-  return list
-    .filter((obj, index) => index % 2 === 0)
-    .map((weatherObj) => {
-      return _.get(weatherObj, ['dt_txt'], '?') + ' UTC\n    ' +
-        exports.transformWeatherObjectToText(weatherObj)
-          .split('\n')
-          .join('\n    ');
-    })
-    .join('\n\n');
+  timezoneApi.getUtcFullOffset(forecastObj.lat, forecastObj.lon, function processOffset(timezoneApiError, utcOffset) {
+    if (timezoneApiError) {
+      console.log(new WError(timezoneApiError, 'Failed to get time offset by location.'));
+
+      utcOffset = 0;
+    }
+
+    const result = list
+      .filter((obj, index) => index % 2 === 0)
+      .map((weatherObj) => {
+        const utcTimestamp = _.get(weatherObj, ['dt']);
+        let time;
+
+        if (!utcTimestamp) {
+          time = '?';
+        } else {
+          time = getFormattedTime(utcTimestamp + utcOffset);
+        }
+
+        if (timezoneApiError && utcTimestamp) {
+          time += ' GMT+0';
+        }
+
+        return time + '\n    ' +
+          exports.transformWeatherObjectToText(weatherObj)
+            .split('\n')
+            .join('\n    ');
+      })
+      .join('\n\n');
+  });
 };
