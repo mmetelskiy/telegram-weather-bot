@@ -65,16 +65,17 @@ exports.transformWeatherObjectToText = function (weatherObj) {
 exports.transformWeatherForecastToText = function (forecastObj) {
   const list = _.get(forecastObj, ['list'], []);
 
-  if (!Array.isAray(list)) {
+  if (!Array.isArray(list)) {
     return 'Failed to get forecast.';
   }
 
   return list
+    .filter((obj, index) => index % 2 === 0)
     .map((weatherObj) => {
-      return _.get(weatherObj, ['dt_txt'], '?') + ' UTC\n' +
+      return _.get(weatherObj, ['dt_txt'], '?') + ' UTC\n    ' +
         exports.transformWeatherObjectToText(weatherObj)
           .split('\n')
-          .join('  \n');
+          .join('\n    ');
     })
-    .join('\n');
+    .join('\n\n');
 };

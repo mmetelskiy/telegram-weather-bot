@@ -111,11 +111,10 @@ exports.get24hForecastByCity = function (city, callback) {
         Array.isArray(result.list) &&
         result.list.slice(0, 8);
 
-      callback(null, {
-        ...result,
+      callback(null, Object.assign({}, result, {
         cnt: weatherListItems.length,
         list: weatherListItems
-      });
+      }));
     }
   });
 };
