@@ -1,7 +1,7 @@
 language: node_js
 
 addons:
-  ssh_known_hosts: "${SERVER_HOST}"
+  ssh_known_hosts: "$SERVER_HOST"
 
 install: true
 
@@ -15,8 +15,13 @@ before_deploy:
 - ssh-add /tmp/deploy_rsa
 
 deploy:
-  provider: script
-  skip_cleanup: true
-  script: ssh travis@${SERVER_HOST} scripts/deploy.sh
-  on:
-    branch: master
+  - provider: script
+    skip_cleanup: true
+    script: ssh-keyscan -H ${SERVER_HOST} >> ~/.ssh/known_hosts
+    on:
+      branch: master
+  - provider: script
+    skip_cleanup: true
+    script: ssh travis@${SERVER_HOST} scripts/deploy.sh
+    on:
+      branch: master
