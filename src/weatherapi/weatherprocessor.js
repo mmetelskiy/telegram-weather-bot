@@ -80,6 +80,18 @@ exports.transformWeatherObjectToText = function (weatherObj) {
     ]
   }
 */
+
+const indexesToSend = {
+  0: true,  // nearest
+  1: true,  // +3
+  2: true,  // +6
+  3: true,  // +9
+  4: true,  // +12
+  5: true,  // +15
+  6: false,  // +18
+  7: false   // +21
+};
+
 exports.transformWeatherForecastToText = function (forecastObj, callback) {
   const list = _.get(forecastObj, ['list'], []);
 
@@ -98,7 +110,7 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
     }
 
     const result = list
-      .filter((obj, index) => index % 2 === 0)
+      .filter((obj, index) => indexesToSend[index])
       .map((weatherObj) => {
         const utcTimestamp = _.get(weatherObj, ['dt']);
         let time;
