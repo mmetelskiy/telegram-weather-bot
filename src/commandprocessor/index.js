@@ -1,38 +1,65 @@
 const WError = require('verror').WError;
+const async = require('async');
+const _ = require('lodash');
 
 const telegramApi = require('../telegramapi');
 const weatherApi = require('../weatherapi');
 const weatherProcessor = require('../weatherapi/weatherprocessor');
+const dataprovider = require('../dataprovider');
 
 const getCurrentWeatherByLocation = function (update) {
   telegramApi.sendLocationRequest(update.message.from.id);
 };
 
 const get24hForecastByCity = function (update, args) {
-  const city = Array.isArray(args) && args.join(' ');
+  async.waterfall([
+    function getCity(next) {
+      const city = Array.isArray(args) && args.join(' ');
 
-  if (!city) {
-    exports.replyWithError(update, 'City wasn\'t provided :(');
-    return;
-  }
-
-  weatherApi.get24hForecastByCity(city, function processWeather(error, result) {
-    if (error) {
-      console.log(new WError(error, 'Failed to get weather forecast.'));
-
-      exports.replyWithError(update, 'Failed to get weather forecast :(');
-      return;
-    }
-
-    weatherProcessor.transformWeatherForecastToText(result, function sendReply(error, reply) {
-      if (error) {
-        console.log(new WError(error, 'Failed to get text from forecast.'));
-
-        exports.replyWithError(update);
-      } else {
-        telegramApi.sendText(update.message.chat.id, reply);
+      if (city) {
+        next(null, city);
+        return;
       }
-    });
+
+      dataprovider.getChatSettingsByChatId(update.message.chat.id, (error, settings) => {
+        if (error) {
+          next(new WError(error, 'Failed to get city.'));
+        } else {
+          next(null, settings.city);
+        }
+      });
+    },
+    function getForecast(city, next) {
+      if (!city) {
+        next(new WError('City wasn\'t provided'));
+        return;
+      }
+
+      weatherApi.get24hForecastByCity(city, (error, result) => {
+        if (error) {
+          next(new WError(error, 'Failed to get weather forecast'));
+        } else {
+          next(null, result);
+        }
+      });
+    },
+    function transformForecastToText(result, next) {
+      weatherProcessor.transformWeatherForecastToText(result, (error, reply) => {
+        if (error) {
+          next(new WError(error, 'Something went wrong'));
+        } else {
+          next(null, reply);
+        }
+      });
+    }
+  ], function processResult(error, reply) {
+    if (error) {
+      console.log(error);
+
+      exports.replyWithError(update, error.message);
+    } else {
+      telegramApi.sendText(update.message.chat.id, reply);
+    }
   });
 };
 
@@ -40,10 +67,45 @@ const processUnknownCommand = function (update) {
   exports.replyWithError(update, 'I don\'t know this command :(');
 };
 
+const setCity = function (update, args) {
+  const city = Array.isArray(args) && args.join(' ');
+
+  if (!city) {
+    exports.replyWithError(update, 'City wasn\' provided');
+    return;
+  }
+
+  dataprovider.setCity(update.message.chat.id, city, (error) => {
+    if (error) {
+      console.log(error);
+      exports.replyWithError(update);
+      return;
+    }
+
+    telegramApi.sendText(update.message.chat.id, `City was saved as "${city}"`);
+  });
+};
+
+const showSettings = function (update) {
+  dataprovider.getChatSettingsByChatId(update.message.chat.id, (error, settings) => {
+    if (error) {
+      console.log(error);
+      exports.replyWithError(update, 'Failed to get settings');
+      return;
+    }
+
+    const city = _.get(settings, 'city', '<not set>');
+    const locale = _.get(settings, 'locale', '<not set>');
+
+    telegramApi.sendText(update.message.chat.id, `Settings:\n  City: ${city}\n  Locale: ${locale}`);
+  });
+};
+
 const knownCommands = {
-  '/w': getCurrentWeatherByLocation,
   '/here': getCurrentWeatherByLocation,
-  '/24h': get24hForecastByCity
+  '/24h': get24hForecastByCity,
+  '/set-city': setCity,
+  '/settings': showSettings
 };
 
 const parseBotCommand = function (update) {

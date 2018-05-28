@@ -61,8 +61,7 @@ exports.transformWeatherObjectToText = function (weatherObj) {
   const emoji = _.get(iconToEmoji, [icon], '?');
 
   return `${emoji} ${description}\n` +
-    `${temperature}\u2103\n` +
-    `${windSpeed}m/s`;
+    `${temperature}\u2103, ${windSpeed}m/s`;
 };
 
 /*
@@ -82,14 +81,24 @@ exports.transformWeatherObjectToText = function (weatherObj) {
 */
 
 const indexesToSend = {
-  0: true,  // nearest
-  1: true,  // +3
-  2: true,  // +6
-  3: true,  // +9
-  4: true,  // +12
-  5: true,  // +15
-  6: false,  // +18
-  7: false   // +21
+  0: true, // nearest
+  1: true, // +3
+  2: true, // +6
+  3: true, // +9
+  4: true, // +12
+  5: true, // +15
+  6: false, // +18
+  7: false // +21
+};
+
+const getLocalTime = function (timezoneApiError, utcOffset) {
+  let localDateString = moment(new Date().getTime() + utcOffset * 1000).format('LT');
+
+  if (timezoneApiError) {
+    localDateString += ' GMT+0';
+  }
+
+  return localDateString;
 };
 
 exports.transformWeatherForecastToText = function (forecastObj, callback) {
@@ -97,6 +106,7 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
 
   if (!Array.isArray(list)) {
     callback(null, 'Failed to get forecast.');
+    return;
   }
 
   const lat = _.get(forecastObj, ['city', 'coord', 'lat'], '?');
@@ -108,6 +118,8 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
 
       utcOffset = 0;
     }
+
+    const resultPrefix = getLocalTime(timezoneApiError, utcOffset);
 
     const result = list
       .filter((obj, index) => indexesToSend[index])
@@ -132,6 +144,6 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
       })
       .join('\n\n');
 
-    callback(null, result);
+    callback(null, `${resultPrefix}\n\n${result}`);
   });
 };
