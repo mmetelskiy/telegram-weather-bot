@@ -126,7 +126,7 @@ const showSettings = function (update) {
 const knownCommands = {
   '/here': getCurrentWeatherByLocation,
   '/24h': get24hForecastByCity,
-  '/set-city': setCity,
+  '/setcity': setCity,
   '/settings': showSettings
 };
 
