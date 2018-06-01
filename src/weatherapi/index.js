@@ -87,6 +87,12 @@ const getWeatherForecast = function (params, callback) {
   makeApiCall('/forecast', params, callback);
 };
 
+exports.getCurrentWeatherByCity = function (city, callback) {
+  getCurrentWeather({
+    q: city
+  }, callback);
+};
+
 exports.getCurrentWeatherByLocation = function ({ longitude, latitude }, callback) {
   getCurrentWeather({
     lat: latitude,
