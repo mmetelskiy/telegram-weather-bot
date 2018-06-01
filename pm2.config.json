@@ -2,7 +2,10 @@
   "apps": [
     {
       "name": "telegram-weather-bot",
-      "script": "src/index.js"
+      "script": "src/index.js",
+      "env": {
+        "TZ": "UTC"
+      }
     }
   ]
 }

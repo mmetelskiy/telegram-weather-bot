@@ -4,7 +4,10 @@ const _ = require('lodash');
 
 const telegramApi = require('../telegramapi');
 const weatherApi = require('../weatherapi');
+const timezoneApi = require('../timezoneapi');
+
 const weatherProcessor = require('../weatherapi/weatherprocessor');
+
 const dataprovider = require('../dataprovider');
 
 const getCurrentWeatherByLocation = function (update) {
@@ -71,19 +74,38 @@ const setCity = function (update, args) {
   const city = Array.isArray(args) && args.join(' ');
 
   if (!city) {
-    exports.replyWithError(update, 'City wasn\' provided');
+    exports.replyWithError(update, 'City wasn\'t provided');
     return;
   }
 
-  dataprovider.setCity(update.message.chat.id, city, (error) => {
-    if (error) {
-      console.log(error);
-      exports.replyWithError(update);
-      return;
-    }
+  dataprovider.saveCityForChat(
+    update.message.chat.id,
+    city,
+    function getCityCoordinates(city, callback) {
+      weatherApi.getCurrentWeatherByCity(city, (error, result) => {
+        if (error) {
+          callback(error);
+        } else {
+          callback(null, {
+            city: result.name,
+            latitude: result.coord.lat,
+            longtitude: result.coord.lon
+          });
+        }
+      });
+    },
+    function getUtcOffset(latitude, longitude, callback) {
+      timezoneApi.getUtcFullOffset(latitude, longitude, callback);
+    },
+    function finish(error, savedOptions) {
+      if (error) {
+        console.log(error);
+        exports.replyWithError(update);
+        return;
+      }
 
-    telegramApi.sendText(update.message.chat.id, `City was saved as "${city}"`);
-  });
+      telegramApi.sendText(update.message.chat.id, `City saved as ${savedOptions.city}.`);
+    });
 };
 
 const showSettings = function (update) {

@@ -101,6 +101,8 @@ const getLocalTime = function (timezoneApiError, utcOffset) {
   return localDateString;
 };
 
+const TAB = '  ';
+
 exports.transformWeatherForecastToText = function (forecastObj, callback) {
   const list = _.get(forecastObj, ['list'], []);
 
@@ -111,6 +113,7 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
 
   const lat = _.get(forecastObj, ['city', 'coord', 'lat'], '?');
   const lon = _.get(forecastObj, ['city', 'coord', 'lon'], '?');
+  const city = _.get(forecastObj, ['city', 'name'], 'Imaginationland');
 
   timezoneApi.getUtcFullOffset(lat, lon, function processOffset(timezoneApiError, utcOffset) {
     if (timezoneApiError) {
@@ -119,7 +122,7 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
       utcOffset = 0;
     }
 
-    const resultPrefix = getLocalTime(timezoneApiError, utcOffset);
+    const resultPrefix = `${city}: ${getLocalTime(timezoneApiError, utcOffset)}`;
 
     const result = list
       .filter((obj, index) => indexesToSend[index])
@@ -137,10 +140,10 @@ exports.transformWeatherForecastToText = function (forecastObj, callback) {
           time += ' GMT+0';
         }
 
-        return time + '\n    ' +
+        return time + `\n${TAB}` + // eslint-disable-line prefer-template
           exports.transformWeatherObjectToText(weatherObj)
             .split('\n')
-            .join('\n    ');
+            .join(`\n${TAB}`);
       })
       .join('\n\n');
 
