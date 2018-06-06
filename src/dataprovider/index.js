@@ -148,9 +148,12 @@ exports.getChatSettingsByChatId = function (chatId, callback) {
     if (error) {
       callback(error);
     } else {
-      callback(error, result && result[0] && {
+      callback(null, result && result[0] && {
         city: result[0].city_name,
         locale: result[0].locale
+      } || {
+        city: '<not set>',
+        locale: '<not set>'
       });
     }
   });
@@ -180,6 +183,8 @@ exports.saveCityForChat = function (chatId, city, getCityInfo, getUtcOffset, cal
         if (error) {
           next(error);
         } else if (cityFromDb) {
+          cityId = cityFromDb.cityId;
+
           next(null);
         } else {
           addCityEntry(connection, city, getCityInfo, getUtcOffset, (error, savedCityId) => {

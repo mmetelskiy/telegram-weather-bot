@@ -123,11 +123,16 @@ const showSettings = function (update) {
   });
 };
 
+const start = function (update) {
+  telegramApi.sendText(update.message.chat.id, 'Hello :)');
+};
+
 const knownCommands = {
   '/here': getCurrentWeatherByLocation,
   '/24h': get24hForecastByCity,
   '/setcity': setCity,
-  '/settings': showSettings
+  '/settings': showSettings,
+  '/start': start
 };
 
 const parseBotCommand = function (update) {
